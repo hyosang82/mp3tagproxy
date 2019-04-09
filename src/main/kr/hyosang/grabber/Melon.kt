@@ -19,7 +19,7 @@ class Melon: GrabberBase() {
 
             val ptImg = Pattern.compile("<img onerror=\"WEBPOCIMG\\.defaultAlbumImg\\(this\\);\" width=\"130\" height=\"130\" src=\"(.*?)\"")
             val ptAlbumName = Pattern.compile("<div class=\"atist_info\">(.*?)<a href=(.*?)melon.link.goAlbumDetail\\('([0-9]+)'\\)(.*?)>(.*?)</a>", Pattern.DOTALL)
-            val ptArtist = Pattern.compile("<dd class=\"atistname\">(.*?)<a(.*?)>(.*?)</a>", Pattern.DOTALL)
+            val ptArtist = Pattern.compile("<dd class=\"atistname\">(.*?)<div class=\"ellipsis\">(.*?)</div>", Pattern.DOTALL)
 
             while (mAlbum.find(lastIdx)) {
                 var albumNo = ""
@@ -40,7 +40,9 @@ class Melon: GrabberBase() {
 
                 val mArtist = ptArtist.matcher(mAlbum.group(0))
                 if(mArtist.find()) {
-                    artist = removeTags(mArtist.group(3))
+                    val tmp = mArtist.group(2)
+                    val idx = tmp.indexOf("<span")
+                    artist = removeTags(tmp.substring(0, idx)).trim()
                 }
 
                 if(arrayOf(albumNo, artist, albumName, image).filter { it.isEmpty() }.count() == 0) {
@@ -68,7 +70,7 @@ class Melon: GrabberBase() {
         val ptAlbumArtist = Pattern.compile("<div class=\"artist\">(.*?)</div>", Pattern.DOTALL)
         val ptMeta = Pattern.compile("<div class=\"meta\">(.*?)</div>", Pattern.DOTALL)
         val ptMetaItem = Pattern.compile("<dt>(.*?)</dt>(.*?)<dd>(.*?)</dd>", Pattern.DOTALL)
-        val ptTracks = Pattern.compile("<tr data-group-items=\"(.*?)\">(.*?)<div class=\"wrap_song_info\">(.*?)<div class=\"ellipsis\"(.*?)>(.*?)</div>(.*?)<div(.*?)>(.*?)</a>", Pattern.DOTALL)
+        val ptTracks = Pattern.compile("<tr data-group-items=\"(.*?)\">(.*?)<span class=\"rank(.*?)>(.*?)</span>(.*?)<div class=\"wrap_song_info\">(.*?)<div class=\"ellipsis\"(.*?)>(.*?)</div>(.*?)<div(.*?)>(.*?)</a>", Pattern.DOTALL)
         val ptATag = Pattern.compile("<a (.*?)>(.*?)</a>", Pattern.DOTALL)
         val ptSpan = Pattern.compile("<span class=\"disabled\">(.*?)</span>", Pattern.DOTALL)
         val ptArtistA = Pattern.compile("<a (.*?)class=\"artist_name\"(.*?)<span>(.*?)</span>", Pattern.DOTALL)
@@ -130,8 +132,9 @@ class Melon: GrabberBase() {
             /*
             val title = removeTags(m.group(7)).trim()
             */
-            val artist = removeTags(m.group(8)).trim()
-            val tmpStr = m.group(5)
+            val trackNo = m.group(4).trim()
+            val artist = removeTags(m.group(11)).trim()
+            val tmpStr = m.group(8)
 
             var m2 = ptATag.matcher(tmpStr)
             if(m2.find()) {
@@ -148,11 +151,13 @@ class Melon: GrabberBase() {
             if(trackMap.containsKey(cd)) {
                 trackMap[cd]!!.tracks.add(Track("", title).apply {
                     this.sung = arrayListOf(Artist("", artist))
+                    this.no = trackNo
                 })
             }else {
                 trackMap.put(cd, Disc(cd).apply {
                     tracks.add(Track("", title).apply {
                         sung = arrayListOf(Artist("", artist))
+                        no = trackNo
                     })
                 })
             }
