@@ -1,0 +1,82 @@
+[Name]=melon.com
+[BasedOn]=www.melon.com
+[IndexUrl]=https://mp3tagproxy.appspot.com/mp3tagproxy/search/melon/%s
+[AlbumUrl]=
+[WordSeparator]=%20
+[IndexFormat]=%_url%|%Album%|%Artist%|%_preview%
+[SearchBy]=%album%
+[UserAgent]=1
+[Encoding]=url-utf-8
+
+[ParserScriptIndex]=...
+#Debug "on" "C:\\Users\\owner\\Documents\\debug.out"
+FindLine "<![ALBUMSEARCHRESULT["
+JoinUntil "]ALBUMSEARCHRESULT]>"
+
+Do
+
+
+FindInLine "<![ALBUMID["
+Say "https://mp3tagproxy.appspot.com/mp3tagproxy/album/melon/"
+SayUntil "]ALBUMID]>"
+Say "|"
+
+FindInLine "<![TITLE["
+SayUntil "]TITLE]>"
+Say "|"
+
+FindInLine "<![ARTIST["
+SayUntil "]ARTIST]>"
+Say "|"
+
+FindInLine "<![COVERARTURL["
+SayUntil "]COVERARTURL]>"
+
+FindInLine "]ALBUMINFO]>"
+
+SayNewline
+
+
+
+While "<![ALBUMINFO["
+
+
+[ParserScriptAlbum]=...
+#Debug "on" "C:\\Users\\owner\\Documents\\debug.out"
+
+
+FindLine "<![ALBUMINFO["
+JoinUntil "]ALBUMINFO]>"
+
+OutputTo "ALBUM"
+FindInLine "<![TITLE["
+SayUntil "]TITLE]>"
+
+OutputTo "ALBUMARTIST"
+FindInLine "<![ALBUMARTIST["
+SayUntil "]ALBUMARTIST]>"
+
+OutputTo "COVERURL"
+FindInLine "<![COVERART["
+SayUntil "]COVERART]>"
+
+Do
+OutputTo "Track"
+FindInLine "<![TRACKNO["
+SayUntil "]TRACKNO]>"
+Say "|"
+
+OutputTo "Title"
+FindInLine "<![TRACKTITLE["
+SayUntil "]TRACKTITLE]>"
+Say "|"
+
+OutputTo "Artist"
+FindInLine "<![TRACKARTIST["
+SayUntil "]TRACKARTIST]>"
+Say "|"
+
+FindInLine "]TRACKS]>"
+
+While "<![TRACKS["
+
