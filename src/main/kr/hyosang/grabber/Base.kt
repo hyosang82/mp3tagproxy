@@ -332,7 +332,14 @@ open class GrabberBase: Thread() {
 
 }
 
-data class Album(val tid: String) {
+interface JSONSerializable {
+    fun toJsonStringify(): String
+    fun toJsonString(key: String, value: String): String {
+        return "\"$key\": \"$value\""
+    }
+}
+
+data class Album(val tid: String): JSONSerializable {
     var albumTitle = ""
     val albumart = ArrayList<String>()
     val albumArtist = ArrayList<Artist>()
@@ -340,6 +347,7 @@ data class Album(val tid: String) {
     var edition = ""
     var catno = ""
     var companies = ""
+    var year = ""
     val discs = ArrayList<Disc>()
 
     fun addAlbumArt(url: String, type: String) {
@@ -351,9 +359,62 @@ data class Album(val tid: String) {
     }
 
     override fun toString(): String {
-        System.out.print("$catno")
-        System.err.flush()
         return "[$catno] $mediaType $albumTitle($tid) ${albumArtist.first()} $edition images=${albumart.count()}, ${discs.joinToString()}"
+    }
+
+    fun toFormattedString(): String {
+        return StringBuffer().apply {
+            append("Album ID: $tid\n")
+            append("Title: $albumTitle\n")
+            albumArtist.forEach {
+                append("Artist: $it\n")
+            }
+            albumart.forEach {
+                append("AlbumArt: $it\n")
+            }
+            discs.forEach { d ->
+                append("Disc ${d.name}\n")
+                d.tracks.forEach { t ->
+                    append("Track ${t.no}: ${t.title}\n")
+                }
+            }
+        }.toString()
+    }
+
+    override fun toJsonStringify(): String {
+        return StringBuffer().apply {
+            append("{")
+            append(toJsonString("albumId", tid)).append(",")
+            append(toJsonString("title", albumTitle)).append(",")
+            append(toJsonString("albumArtist", albumArtist.first().toString())).append(",")
+            append(toJsonString("year", year)).append(",")
+            append(toJsonString("cover", albumart.first())).append(",")
+            append("\"tracks\": [")
+            discs.forEach { disc ->
+                disc.tracks.forEach { track ->
+                    append("{").append(toJsonString("no", track.no)).append(",")
+                    append(toJsonString("title", track.title)).append(",")
+                    if(track.sung.isEmpty()) {
+                        append(toJsonString("artist", albumArtist.first().name))
+                    }else {
+                        append(toJsonString("artist", track.sung.first().name))
+                    }
+                    append(",")
+                    append(toJsonString("disc", disc.name))
+                    append("}")
+
+                    if(disc.tracks.last() != track) {
+                        append(", ")
+                    }
+                }
+                if(discs.last() != disc) {
+                    append(", ")
+                }
+            }
+            append("]")
+            append("}")
+        }.toString()
+
     }
 }
 
@@ -392,4 +453,15 @@ data class AlbumSearchItem(val id: String,
                            val title: String,
                            val albumArtist: String,
                            val albumImageUrl: String
-)
+): JSONSerializable {
+    override fun toJsonStringify(): String {
+        return StringBuffer().apply {
+            append("{")
+            append(toJsonString("id", id)).append(",")
+            append(toJsonString("title", title)).append(",")
+            append(toJsonString("artist", albumArtist)).append(",")
+            append(toJsonString("cover", albumImageUrl))
+            append("}")
+        }.toString()
+    }
+}

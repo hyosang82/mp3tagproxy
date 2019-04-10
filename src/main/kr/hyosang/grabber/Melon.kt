@@ -46,7 +46,7 @@ class Melon: GrabberBase() {
                 }
 
                 if(arrayOf(albumNo, artist, albumName, image).filter { it.isEmpty() }.count() == 0) {
-                    list.add(AlbumSearchItem(albumNo, title, artist, image))
+                    list.add(AlbumSearchItem(albumNo, albumName, artist, image))
                 }else {
                     System.out.println("Empty? Album: $albumNo ($artist): $albumName $image")
                 }
@@ -57,6 +57,7 @@ class Melon: GrabberBase() {
 
                 lastIdx = mAlbum.end()
             }
+            break
         }while((pageCount > 0) && (startIndex < 100))
 
         return list
@@ -178,7 +179,8 @@ class Melon: GrabberBase() {
         album.albumArtist.add(Artist("", albArtist))
         album.albumart.add(albumImage)
         album.companies = "$agency, $publisher"
-        album.discs.addAll(trackMap.filterValues { true }.values)
+        album.year = released
+        album.discs.addAll(trackMap.values.sortedBy {it.name})
 
         return album
     }
