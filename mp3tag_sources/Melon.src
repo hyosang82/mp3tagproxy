@@ -10,73 +10,71 @@
 
 [ParserScriptIndex]=...
 #Debug "on" "C:\\Users\\owner\\Documents\\debug.out"
-FindLine "<![ALBUMSEARCHRESULT["
-JoinUntil "]ALBUMSEARCHRESULT]>"
+json "on"
 
-Do
+json_foreach ""
+  json_select "id"
+  say "https://mp3tagproxy.appspot.com/mp3tagproxy/album/melon/"
+  sayrest
+  say "|"
 
+  json_select "title"
+  sayrest
+  say "|"
 
-FindInLine "<![ALBUMID["
-Say "https://mp3tagproxy.appspot.com/mp3tagproxy/album/melon/"
-SayUntil "]ALBUMID]>"
-Say "|"
+  json_select "artist"
+  sayrest
+  say "|"
 
-FindInLine "<![TITLE["
-SayUntil "]TITLE]>"
-Say "|"
+  json_select "cover"
+  sayrest
 
-FindInLine "<![ARTIST["
-SayUntil "]ARTIST]>"
-Say "|"
-
-FindInLine "<![COVERARTURL["
-SayUntil "]COVERARTURL]>"
-
-FindInLine "]ALBUMINFO]>"
-
-SayNewline
-
-
-
-While "<![ALBUMINFO["
-
+  saynewline
+json_foreach_end
 
 [ParserScriptAlbum]=...
 #Debug "on" "C:\\Users\\owner\\Documents\\debug.out"
+json "on"
 
+outputto "MELON_ALBUMID"
+json_select "albumId"
+sayrest
 
-FindLine "<![ALBUMINFO["
-JoinUntil "]ALBUMINFO]>"
+outputto "ALBUM"
+json_select "title"
+sayrest
 
-OutputTo "ALBUM"
-FindInLine "<![TITLE["
-SayUntil "]TITLE]>"
+outputto "ALBUMARTIST"
+json_select "albumArtist"
+sayrest
 
-OutputTo "ALBUMARTIST"
-FindInLine "<![ALBUMARTIST["
-SayUntil "]ALBUMARTIST]>"
+outputto "YEAR"
+json_select "year"
+sayrest
 
-OutputTo "COVERURL"
-FindInLine "<![COVERART["
-SayUntil "]COVERART]>"
+outputto "COVERURL"
+json_select "cover"
+sayrest
 
-Do
-OutputTo "Track"
-FindInLine "<![TRACKNO["
-SayUntil "]TRACKNO]>"
-Say "|"
+json_foreach "tracks"
+  outputto "TRACK"
+  json_select "no"
+  sayrest
+  say "|"
 
-OutputTo "Title"
-FindInLine "<![TRACKTITLE["
-SayUntil "]TRACKTITLE]>"
-Say "|"
+  outputto "TITLE"
+  json_select "title"
+  sayrest
+  say "|"
 
-OutputTo "Artist"
-FindInLine "<![TRACKARTIST["
-SayUntil "]TRACKARTIST]>"
-Say "|"
+  outputto "ARTIST"
+  json_select "artist"
+  sayrest
+  say "|"
 
-FindInLine "]TRACKS]>"
-
-While "<![TRACKS["
+  outputto "DISCNUMBER"
+  json_select "disc"
+  sayrest
+  say "|"
+json_foreach_end
 
