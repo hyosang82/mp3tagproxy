@@ -453,4 +453,15 @@ data class AlbumSearchItem(val id: String,
                            val title: String,
                            val albumArtist: String,
                            val albumImageUrl: String
-)
+): JSONSerializable {
+    override fun toJsonStringify(): String {
+        return StringBuffer().apply {
+            append("{")
+            append(toJsonString("id", id)).append(",")
+            append(toJsonString("title", title)).append(",")
+            append(toJsonString("artist", albumArtist)).append(",")
+            append(toJsonString("cover", albumImageUrl))
+            append("}")
+        }.toString()
+    }
+}
