@@ -56,22 +56,12 @@ class Mp3tagProxy: HttpServlet() {
         }
 
         if(worker != null) {
-            val sb = StringBuffer()
-            val album = worker!!.searchAlbum(searchQuery)
-
-            sb.append("<![ALBUMSEARCHRESULT[")
-            album.forEach {
-                sb.append("<![ALBUMINFO[")
-                sb.append("<![ALBUMID[${it.id}]ALBUMID]>")
-                sb.append("<![TITLE[${it.title}]TITLE]>")
-                sb.append("<![ARTIST[${it.albumArtist}]ARTIST]>")
-                sb.append("<![COVERARTURL[${it.albumImageUrl}]COVERARTURL]>")
-                sb.append("]ALBUMINFO]>")
-            }
-            sb.append("]ALBUMSEARCHRESULT]>")
-
-            resp?.addHeader("Content-Type", "text/plain; charset=utf8")
-            resp?.outputStream?.write(sb.toString().toByteArray(Charsets.UTF_8))
+            val album = worker.searchAlbum(searchQuery)
+            resp?.characterEncoding = "utf-8"
+            resp?.addHeader("Content-Type", "application/json; charset=utf8")
+            resp?.outputStream?.write(album.joinToString(", ", "[", "]", -1, "...") {
+                    it.toJsonStringify()
+            }.toByteArray(Charsets.UTF_8))
         }
     }
 
@@ -85,34 +75,8 @@ class Mp3tagProxy: HttpServlet() {
 
         if(worker != null) {
             val data = worker.getAlbumDetail(albumId)
-            val sb = StringBuffer()
-
-            sb.append("<![ALBUMINFO[")
-            sb.append("<![TITLE[${data.albumTitle}]TITLE]>")
-            sb.append("<![ALBUMARTIST[${data.albumArtist}]ALBUMARTIST]>")
-            sb.append("<![COVERART[${data.albumart}]COVERART]>")
-            sb.append("<![ALBUMID[${data.tid}]ALBUMID]>")
-
-
-
-            sb.append("<![TRACKLIST[")
-
-            data.discs.forEach {
-                it.tracks.forEach { tr ->
-                    sb.append("<![TRACKS[")
-                    sb.append("<![TRACKNO[${tr.no}]TRACKNO]>")
-                      .append("<![TRACKTITLE[${tr.title}]TRACKTITLE]>")
-                      .append("<![TRACKARTIST[${tr.sung}]TRACKARTIST]>")
-                      .append("]TRACKS]>")
-
-                }
-            }
-
-            sb.append("]TRACKLIST]>")
-            sb.append("]ALBUMINFO]>")
-
-            resp?.addHeader("Content-Type", "text/plain; charset=utf8")
-            resp?.outputStream?.write(sb.toString().toByteArray(Charsets.UTF_8))
+            resp?.addHeader("Content-Type", "application/json; charset=utf8")
+            resp?.outputStream?.write(data.toJsonStringify().toByteArray(Charsets.UTF_8))
         }
     }
 

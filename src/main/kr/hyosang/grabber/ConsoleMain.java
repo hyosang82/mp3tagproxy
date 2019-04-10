@@ -1,9 +1,5 @@
 package kr.hyosang.grabber;
 
-import jdk.nashorn.internal.objects.NativeJSON;
-
-import java.util.ArrayList;
-
 public class ConsoleMain {
     public static final void main(String[] args) {
         Melon m = new Melon();
