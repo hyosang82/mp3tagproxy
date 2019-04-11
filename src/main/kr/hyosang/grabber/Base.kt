@@ -403,11 +403,11 @@ data class Album(val tid: String): JSONSerializable {
                     append(toJsonString("disc", disc.name))
                     append("}")
 
-                    if(disc.tracks.last() != track) {
+                    if(disc.tracks.last() !== track) {
                         append(", ")
                     }
                 }
-                if(discs.last() != disc) {
+                if(discs.last() !== disc) {
                     append(", ")
                 }
             }
