@@ -1,0 +1,55 @@
+[Name]=melon.com
+[BasedOn]=www.melon.com
+[AlbumUrl]=https://mp3tagproxy.appspot.com/mp3tagproxy/album/melon/%s
+[WordSeparator]=%20
+[UserAgent]=1
+[Encoding]=url-utf-8
+
+[ParserScriptIndex]=...
+
+[ParserScriptAlbum]=...
+#Debug "on" "C:\\Users\\owner\\Documents\\debug.out"
+json "on"
+
+outputto "MELON_ALBUMID"
+json_select "albumId"
+sayrest
+
+outputto "ALBUM"
+json_select "title"
+sayrest
+
+outputto "ALBUMARTIST"
+json_select "albumArtist"
+sayrest
+
+outputto "YEAR"
+json_select "year"
+sayrest
+
+outputto "COVERURL"
+json_select "cover"
+sayrest
+
+json_foreach "tracks"
+  outputto "TRACK"
+  json_select "no"
+  sayrest
+  say "|"
+
+  outputto "TITLE"
+  json_select "title"
+  sayrest
+  say "|"
+
+  outputto "ARTIST"
+  json_select "artist"
+  sayrest
+  say "|"
+
+  outputto "DISCNUMBER"
+  json_select "disc"
+  sayrest
+  say "|"
+json_foreach_end
+
