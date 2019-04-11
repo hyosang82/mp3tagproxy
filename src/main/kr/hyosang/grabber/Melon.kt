@@ -35,7 +35,7 @@ class Melon: GrabberBase() {
                 val mAlb = ptAlbumName.matcher(mAlbum.group(0))
                 if(mAlb.find()) {
                     albumNo = mAlb.group(3)
-                    albumName = mAlb.group(5)
+                    albumName = removeTags(mAlb.group(5))
                 }
 
                 val mArtist = ptArtist.matcher(mAlbum.group(0))
@@ -71,8 +71,9 @@ class Melon: GrabberBase() {
         val ptAlbumArtist = Pattern.compile("<div class=\"artist\">(.*?)</div>", Pattern.DOTALL)
         val ptMeta = Pattern.compile("<div class=\"meta\">(.*?)</div>", Pattern.DOTALL)
         val ptMetaItem = Pattern.compile("<dt>(.*?)</dt>(.*?)<dd>(.*?)</dd>", Pattern.DOTALL)
-        val ptTracks = Pattern.compile("<tr data-group-items=\"(.*?)\">(.*?)<span class=\"rank(.*?)>(.*?)</span>(.*?)<div class=\"wrap_song_info\">(.*?)<div class=\"ellipsis\"(.*?)>(.*?)</div>(.*?)<div(.*?)>(.*?)</a>", Pattern.DOTALL)
+        val ptTracks = Pattern.compile("<tr data-group-items=\"(.*?)\">(.*?)<span class=\"rank(.*?)>(.*?)</span>(.*?)<div class=\"wrap_song_info\">(.*?)<div class=\"ellipsis\"(.*?)>(.*?)</div>(.*?)<div(.*?)>(.*?)</div>", Pattern.DOTALL)
         val ptATag = Pattern.compile("<a (.*?)>(.*?)</a>", Pattern.DOTALL)
+        val ptSpanOnly = Pattern.compile("<span (.*?)>(.*?)</span>", Pattern.DOTALL)
         val ptSpan = Pattern.compile("<span class=\"disabled\">(.*?)</span>", Pattern.DOTALL)
         val ptArtistA = Pattern.compile("<a (.*?)class=\"artist_name\"(.*?)<span>(.*?)</span>", Pattern.DOTALL)
         val ptImgUrl = Pattern.compile("\\('#d_album_org'\\).click(.*?)'&albumImgPath='(.*?)'(.*?)'(.*?)'&albumImgMd5Hash='(.*?)'(.*?)'", Pattern.DOTALL)
@@ -130,11 +131,7 @@ class Melon: GrabberBase() {
         while(m.find(lastIdx)) {
             val cd = m.group(1)
             var title = ""
-            /*
-            val title = removeTags(m.group(7)).trim()
-            */
             val trackNo = m.group(4).trim()
-            val artist = removeTags(m.group(11)).trim()
             val tmpStr = m.group(8)
 
             var m2 = ptATag.matcher(tmpStr)
@@ -147,6 +144,13 @@ class Melon: GrabberBase() {
                 }else {
                     System.out.println("Cannot find $tmpStr")
                 }
+            }
+
+            val artistDiv = m.group(11).trim()
+            var m3 = ptSpanOnly.matcher(artistDiv)
+            var artist = ""
+            if(m3.find()) {
+                artist = removeTags(m3.group(2)).trim()
             }
 
             if(trackMap.containsKey(cd)) {
