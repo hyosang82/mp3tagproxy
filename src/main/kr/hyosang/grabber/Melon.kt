@@ -188,4 +188,150 @@ class Melon: GrabberBase() {
 
         return album
     }
+
+    fun searchSong(query: String): ArrayList<SongSearchItem> {
+        val url = "https://www.melon.com/search/song/index.htm?q=$query&section=&searchGnbYn=Y&kkoSpl=N&kkoDpType=&ipath=srch_form"
+        val html = getContent(url)
+
+        val fromIdx = html.indexOf("<div class=\"tb_list d_song_list songTypeOne\"")
+        val toIdx = html.indexOf("</form>", fromIdx)
+
+        val listhtml = html.substring(fromIdx, toIdx)
+
+        val ptrTbody = Pattern.compile("<tbody(.*?)</tbody>", Pattern.DOTALL)
+        val ptrTr = Pattern.compile("<tr(.*?)</tr>", Pattern.DOTALL)
+        val ptrSonglink = Pattern.compile("melon\\.link\\.goSongDetail\\('([0-9]+)'")
+        val ptrTitle = Pattern.compile("<(a|span)(.*?)melon\\.play\\.playSong(.*?)>(.+?)<")
+        val ptrArtist = Pattern.compile("<div id=\"artistName\"(.*?)<span(.*?)>(.+?)<", Pattern.DOTALL)
+        val ptrAlbum = Pattern.compile("melon\\.link\\.goAlbumDetail(.*?)>(.*?)<")
+
+        val list = ArrayList<SongSearchItem>()
+
+        var m = ptrTbody.matcher(listhtml)
+        if(m.find()) {
+            val tbody = m.group(1)
+            var lastIdx = 0
+
+            m = ptrTr.matcher(tbody)
+            while(m.find(lastIdx)) {
+                var id = ""
+                var title = ""
+                var artist = ""
+                var album = ""
+
+                var m2 = ptrSonglink.matcher(m.group(1))
+                if(m2.find()) {
+                    id = m2.group(1)
+                }
+
+                m2 = ptrTitle.matcher(m.group(1))
+                if(m2.find()) {
+                    title = m2.group(4)
+                }
+
+                m2 = ptrArtist.matcher(m.group(1))
+                if(m2.find()) {
+                    artist = removeTags(m2.group(3))
+                }
+
+                m2 = ptrAlbum.matcher(m.group(1))
+                if(m2.find()) {
+                    album = m2.group(2)
+                }
+
+                if(id.isNotEmpty() && title.isNotEmpty() && artist.isNotEmpty() && album.isNotEmpty()) {
+                    list.add(SongSearchItem(id, title, artist, album))
+                }
+
+                lastIdx = m.end()
+            }
+        }else {
+            System.err.println("Cannot found tbody...")
+        }
+
+        return list
+    }
+
+    fun getSongDetail(songId: String): Album {
+        val url = "https://www.melon.com/song/detail.htm?songId=$songId"
+        var content = getContent(url)
+
+        val ptSongName = Pattern.compile("<strong class=\"none\">곡명</strong>(.*?)</div>", Pattern.DOTALL)
+        val ptAlbumArtist = Pattern.compile("<div class=\"artist\">(.*?)</div>", Pattern.DOTALL)
+        val ptMeta = Pattern.compile("<div class=\"meta\">(.*?)</div>", Pattern.DOTALL)
+        val ptMetaItem = Pattern.compile("<dt>(.*?)</dt>(.*?)<dd>(.*?)</dd>", Pattern.DOTALL)
+        val ptArtistA = Pattern.compile("<a (.*?)class=\"artist_name\"(.*?)<span>(.*?)</span>", Pattern.DOTALL)
+        val ptImgUrl = Pattern.compile("\\('#d_album_org'\\).click(.*?)'&albumImgPath='(.*?)'(.*?)'(.*?)'&albumImgMd5Hash='(.*?)'(.*?)'", Pattern.DOTALL)
+
+        var albName = ""
+        var albArtist = ""
+        var agency = ""
+        var publisher = ""
+        var genre = ""
+        var released = ""
+        var albumImagePageUrl = ""
+        var albumImage = ""
+        var songtitle = ""
+
+        var m = ptSongName.matcher(content)
+        if(m.find()) {
+            songtitle = decodeHtmlChars(m.group(1).trim())
+        }
+
+        m = ptImgUrl.matcher(content)
+        if(m.find()) {
+            albumImagePageUrl = "https://www.melon.com/album/albumImgAjax.htm?albumImgPath=${m.group(3)}&albumImgMd5Hash=${m.group(6)}"
+        }
+
+        m = ptAlbumArtist.matcher(content)
+        if(m.find()) {
+            val m2 = ptArtistA.matcher(m.group(1))
+            if(m2.find()) {
+                albArtist = decodeHtmlChars(m2.group(3))
+            }else {
+                //V.A
+                albArtist = m.group(1).trim()
+            }
+        }
+
+        m = ptMeta.matcher(content)
+        if(m.find()) {
+            val m2 = ptMetaItem.matcher(m.group(0))
+            var lastIdx = 0
+            while(m2.find(lastIdx)) {
+                when(m2.group(1)) {
+                    "앨범" -> albName = removeTags(m2.group(3))
+                    "발매일" -> released = formatYear(m2.group(3))
+                    "장르" -> genre = m2.group(3)
+                    "발매사" -> publisher = m2.group(3)
+                    "기획사" -> agency = m2.group(3)
+                }
+
+                lastIdx = m2.end()
+            }
+        }
+
+
+        //load album image
+        System.out.println("IMAGE URL: ${albumImagePageUrl}")
+        content = getContent(albumImagePageUrl)
+        val ptImg = Pattern.compile("<img onerror=(.*?)src=\"(.*?)\"")
+        m = ptImg.matcher(content)
+        if(m.find()) {
+            albumImage = m.group(2)
+        }
+
+        val track = Track(songId, songtitle)
+        track.sung = arrayListOf(Artist("0", albArtist))
+
+        val album = Album("0")
+        album.albumTitle = albName
+        album.albumArtist.add(Artist("", albArtist))
+        album.albumart.add(albumImage)
+        album.companies = "$agency, $publisher"
+        album.year = released
+        album.discs.add(Disc("1").apply { tracks.add(track) })
+
+        return album
+    }
 }

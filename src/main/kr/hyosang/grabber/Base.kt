@@ -465,3 +465,19 @@ data class AlbumSearchItem(val id: String,
         }.toString()
     }
 }
+
+data class SongSearchItem(val id: String,
+                          val title: String,
+                          val artist: String,
+                          val album: String): JSONSerializable {
+    override fun toJsonStringify(): String {
+        return StringBuffer().apply {
+            append("{")
+            append(toJsonString("id", id)).append(",")
+            append(toJsonString("title", title)).append(",")
+            append(toJsonString("artist", artist)).append(",")
+            append(toJsonString("album", album)).append(",")
+            append("}")
+        }.toString()
+    }
+}
